@@ -1,10 +1,10 @@
 import sys
 import json
 import pandas as pd
-from typing import Dict
+from typing import Dict, List
 
 
-def datasetGenerator(data_json: json = None) -> list[pd.DataFrame]:
+def datasetGenerator(data_json: json = None) -> List[pd.DataFrame]:
     dataframes = dict()
     print()
     for chave, lista_dicionarios in data_json.items():

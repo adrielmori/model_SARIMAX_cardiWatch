@@ -8,6 +8,10 @@ from typing import Dict
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 from dataloader.dataloader import DataLoader
+import numpy as np
+
+# Defina a semente
+np.random.seed(25)
 
 
 class DataSet:
