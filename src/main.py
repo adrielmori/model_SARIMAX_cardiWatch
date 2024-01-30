@@ -112,9 +112,8 @@ if __name__ == "__main__":
     mqtt_client.connect()
     mqtt_client.loop_forever()
 
-    request_to_mqtt = pipeline_process(
-        getDataloader(mqtt_client.data_json), CONFIG_MODEL
-    )
+    print(mqtt_client.data)
+    request_to_mqtt = pipeline_process(getDataloader(mqtt_client.data), CONFIG_MODEL)
     mqtt_client.publish("cardiwatch_request", json.dumps(request_to_mqtt, default=str))
 
     # with open("data.json", "r") as arquivo:

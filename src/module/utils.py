@@ -1,8 +1,69 @@
 # data_processing/data_processing.py
+from datetime import datetime, timedelta
 import pandas as pd
 import json
+import sys
+import numpy as np
 from typing import Dict
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
+
+from dataloader.dataloader import DataLoader
+
+
+class DataSet:
+    def __init__(self, dataset: Dict[str, pd.DataFrame]):
+        self.dataset = dataset
+
+    def filter_dataframes(self, start: int, end: int) -> None:
+        """
+        Filtra os DataFrames no DataLoader para incluir apenas as linhas onde 'day' está entre 'start' e 'end'.
+
+        Parâmetros:
+        - start (int): O primeiro dia do intervalo.
+        - end (int): O último dia do intervalo.
+        """
+        for key in self.dataset.keys():
+            df = self.dataset[key]
+            self.dataset[key] = df[(df["day"] >= start) & (df["day"] <= end)]
+
+    def bootstrap_fill(self, start: int, end: int) -> None:
+        """
+        Preenche os dias faltantes nos DataFrames no DataLoader usando a técnica de bootstrapping.
+
+        Parâmetros:
+        - start (int): O primeiro dia do intervalo.
+        - end (int): O último dia do intervalo.
+        """
+        full_range = pd.DataFrame(range(start, end + 1), columns=["day"])
+
+        for key in self.dataset.keys():
+            df = self.dataset[key]
+            merged_df = pd.merge(full_range, df, on="day", how="left")
+            missing_rows = merged_df.isnull().any(axis=1)
+
+            for column in df.columns:
+                if column != "day":
+                    bootstrap_sample = (
+                        df[column]
+                        .dropna()
+                        .sample(n=missing_rows.sum(), replace=True)
+                        .values
+                    )
+                    merged_df.loc[missing_rows, column] = bootstrap_sample
+
+            self.dataset[key] = merged_df
+
+    def process_dataset(self, start: int = None, end: int = None) -> None:
+        """
+        Processa o DataLoader, filtrando e preenchendo os DataFrames conforme necessário.
+
+        Parâmetros:
+        - start (int, opcional): O primeiro dia do intervalo. Se None, não filtra os DataFrames.
+        - end (int, opcional): O último dia do intervalo. Se None, não filtra os DataFrames.
+        """
+        if start is not None and end is not None:
+            self.filter_dataframes(start, end)
+            self.bootstrap_fill(start, end)
 
 
 def process_json(json_data: Dict, df: pd.DataFrame) -> pd.DataFrame:
@@ -36,7 +97,7 @@ def dataset_preprocessing(dataset: pd.DataFrame = None) -> pd.DataFrame:
         pass
 
     colunas_a_normalizar = [
-        coluna for coluna in dataset.columns if coluna not in ["date", "body_weight"]
+        coluna for coluna in dataset.columns if coluna not in ["day", "weight"]
     ]
 
     scaler = StandardScaler()
@@ -59,7 +120,7 @@ def dataset_preprocessing_minMax(dataset: pd.DataFrame = None) -> pd.DataFrame:
         pass
 
     colunas_a_normalizar = [
-        coluna for coluna in dataset.columns if coluna not in ["date", "body_weight"]
+        coluna for coluna in dataset.columns if coluna not in ["day", "weight"]
     ]
 
     scaler = MinMaxScaler(feature_range=(-1, 1))
@@ -68,41 +129,38 @@ def dataset_preprocessing_minMax(dataset: pd.DataFrame = None) -> pd.DataFrame:
     return dataset
 
 
-def dataset_processing(dataset: pd.DataFrame, calories: Dict, start: str = None) -> pd.DataFrame:
+def convert_index_to_date(dataloader):
     """
-    Processa o DataFrame, renomeando colunas, adicionando a coluna 'date', 'calories' e reorganizando as colunas.
+    Converte o índice numérico dos DataFrames no DataLoader para o formato de data.
 
     Parâmetros:
-    - dataset: DataFrame a ser processado.
-    - calories: Dicionário de calorias por dia da semana.
-
-    Retorna:
-    - dataset: DataFrame processado.
+    - dataloader: O DataLoader contendo os DataFrames.
     """
-    colunas = [
-        "steps",
-        "median_heart_rate",
-        "sleep_point",
-        "time_sleep",
-        "calories_consumed",
-        "calories_burn",
-        "stress",
-        "body_weight",
-    ]
+    # Obtém a data atual
+    today = datetime.today().date()
 
-    # Trocar o nome das colunas
-    df_temp = pd.DataFrame()
-    dataset = dataset.rename(columns=dict(zip(dataset.columns, colunas)))
+    df = dataloader
+    start_date = today - pd.DateOffset(days=int(df.index[-1]))
 
-    # Criar coluna 'date'
-    dataset["date"] = pd.date_range(start=start, periods=len(dataset), freq="D")
-    dataset["day_of_week"] = dataset["date"].dt.day_name()
-    dataset["calories"] = dataset["day_of_week"].map(calories)
+    # Converte o índice numérico para data
+    df.index = pd.to_datetime(
+        df.index.map(lambda x: start_date + pd.DateOffset(days=x))
+    )
 
-    dataset = dataset.drop(columns=["day_of_week"])
-    colunas = ["date", "calories"] + [
-        coluna for coluna in dataset if coluna not in ["date", "calories"]
-    ]
-    dataset = dataset[colunas]
+    return df
 
-    return dataset
+
+def aggregate_dataframes(dataloader):
+    for key in dataloader.dataset.keys():
+        df = dataloader.dataset[key]
+
+        # Agrupa por 'day' e calcula a média das outras colunas
+        df = df.groupby("day").mean().reset_index()
+
+        dataloader.dataset[key] = df
+
+
+def getDataloader(data_json: json = None):
+    print("GERANDO O DATALOADER: \n\n", data_json, "\n")
+
+    return DataLoader(data_json)

@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from statsmodels.tsa.statespace.sarimax import SARIMAX
+import sys
 
 
 class SARIMAXPredictor:
@@ -42,7 +43,10 @@ class SARIMAXPredictor:
             order=self.order,
             seasonal_order=self.seasonal_order,
         )
-        self.results = self.model.fit(maxiter=22, method="lbfgs", ol=1e-20, gtol=1e-20)
+        self.results = self.model.fit(
+            maxiter=1000, method="lbfgs", ol=1e-20, gtol=1e-20
+        )
+        # self.results = self.model.fit(maxiter=1000)
 
     def forecast(self, test_data):
         """
