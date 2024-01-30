@@ -9,7 +9,7 @@ from module.utils import (
     convert_index_to_date,
 )
 from module.model_learning import SARIMAXPredictor
-from module.conection import MqttClient
+from module.conection import *
 from dataloader.dataloader import DataLoader
 
 from datetime import datetime, timedelta
@@ -107,15 +107,6 @@ if __name__ == "__main__":
     mqtt_client = MqttClient(
         broker_address, broker_port, topic_names=topic_names, save=True
     )
-
     mqtt_client.broker_verify()
     mqtt_client.connect()
     mqtt_client.loop_forever()
-
-    print(mqtt_client.data)
-    request_to_mqtt = pipeline_process(getDataloader(mqtt_client.data), CONFIG_MODEL)
-    mqtt_client.publish("cardiwatch_request", json.dumps(request_to_mqtt, default=str))
-
-    # with open("data.json", "r") as arquivo:
-    #     dados_json = json.load(arquivo)
-    # request_to_mqtt = pipeline_process(getDataloader(dados_json), CONFIG_MODEL)

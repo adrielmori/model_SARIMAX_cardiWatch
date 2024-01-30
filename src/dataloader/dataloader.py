@@ -6,6 +6,7 @@ from typing import Dict
 
 def datasetGenerator(data_json: json = None) -> list[pd.DataFrame]:
     dataframes = dict()
+    print()
     for chave, lista_dicionarios in data_json.items():
         df = pd.DataFrame(lista_dicionarios)
         dataframes[chave] = df

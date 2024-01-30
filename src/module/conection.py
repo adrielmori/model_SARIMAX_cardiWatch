@@ -2,6 +2,7 @@ import paho.mqtt.client as mqtt
 import socket
 import pandas as pd
 import json
+from main import *
 
 
 class MqttClient:
@@ -39,6 +40,13 @@ class MqttClient:
             if self.save == True:
                 with open("data.json", "w") as file:
                     json.dump(self.data_json, file, indent=2)
+
+            request_to_mqtt = pipeline_process(
+                getDataloader(self.data_json), CONFIG_MODEL
+            )
+            print(request_to_mqtt)
+            self.publish("cardiwatch_request", json.dumps(request_to_mqtt, default=str))
+
         except json.JSONDecodeError as e:
             print("Erro ao decodificar JSON:", e)
 
