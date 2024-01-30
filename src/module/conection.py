@@ -40,7 +40,7 @@ class MqttClient:
             if self.save == True:
                 with open("data.json", "w") as file:
                     json.dump(self.data_json, file, indent=2)
-
+                    
             request_to_mqtt = pipeline_process(
                 getDataloader(self.data_json), CONFIG_MODEL
             )

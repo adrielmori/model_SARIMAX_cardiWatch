@@ -77,7 +77,7 @@ def pipeline_process(dataloader: DataLoader, CONFIG_MODEL) -> json:
     start_date = pd.to_datetime(dataloader.horizon_data["ended"])
 
     # Subtraia a data de início de cada data na coluna 'day' e converta para dias
-    preds["day"] = (preds["day"] - start_date).dt.days
+    preds["day"] = (preds["day"] - start_date).dt.days + 1
 
     # Suponha que 'df' é seu DataFrame
     dict_data = preds.to_dict("records")
