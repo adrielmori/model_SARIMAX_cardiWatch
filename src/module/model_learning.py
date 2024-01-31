@@ -6,7 +6,11 @@ import sys
 
 class SARIMAXPredictor:
     def __init__(
-        self, order=(1, 1, 1), seasonal_order=(1, 1, 1, 7), target: str = None
+        self,
+        order=(1, 1, 1),
+        seasonal_order=(1, 1, 1, 7),
+        trend=(1, 1, 1),
+        target: str = None,
     ):
         """
         Inicializa o modelo SARIMAX.
@@ -25,6 +29,7 @@ class SARIMAXPredictor:
                 Representa a periodicidade sazonal da série temporal.
         """
         self.order = order
+        self.trend = trend
         self.seasonal_order = seasonal_order
         self.model = None
         self.target = target
@@ -42,11 +47,18 @@ class SARIMAXPredictor:
             exog=exog_vars,
             order=self.order,
             seasonal_order=self.seasonal_order,
+            trend=self.trend,
+            mle_regression=True,
+            force_stationarity=True,
         )
         self.results = self.model.fit(
-            maxiter=1000, method="lbfgs", ol=1e-20, gtol=1e-20
+            maxiter=100, method="bfgs", gtol=1e-20, epsilon=1e-10
         )
-        # self.results = self.model.fit(maxiter=1000)
+        # self.results = self.model.fit(
+        #     maxiter=100, method="lbfgs", ol=1e-20, gtol=1e-20, epsilon=1e-10
+        # )
+        # self.results = self.model.fit(maxiter=10, method="nm")
+        # self.results = self.model.fit(maxiter=100)
 
     def forecast(self, test_data):
         """
