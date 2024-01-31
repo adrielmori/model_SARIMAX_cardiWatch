@@ -111,20 +111,20 @@ CONFIG_MODEL = {
 }
 
 if __name__ == "__main__":
-    # broker_address = "34.198.232.62"
-    # broker_port = 1883
-    # topic_names = ["cardiwatch", "messager"]
+    broker_address = "34.198.232.62"
+    broker_port = 1883
+    topic_names = ["cardiwatch", "messager"]
 
-    # mqtt_client = (
-    #     MqttClient(  ## Logic Implementation to connect and Genereted the Digitial Twin
-    #         broker_address, broker_port, topic_names=topic_names, save=True
-    #     )
-    # )
-    # mqtt_client.broker_verify()
-    # mqtt_client.connect()
-    # mqtt_client.loop_forever()
+    mqtt_client = (
+        MqttClient(  ## Logic Implementation to connect and Genereted the Digitial Twin
+            broker_address, broker_port, topic_names=topic_names, save=True
+        )
+    )
+    mqtt_client.broker_verify()
+    mqtt_client.connect()
+    mqtt_client.loop_forever()
 
-    with open("data.json", "r") as arquivo:
-        data_json = json.load(arquivo)
-    request_to_mqtt = pipeline_process(getDataloader(data_json), CONFIG_MODEL)
-    print(request_to_mqtt)
+    # with open("data.json", "r") as arquivo:
+    #     data_json = json.load(arquivo)
+    # request_to_mqtt = pipeline_process(getDataloader(data_json), CONFIG_MODEL)
+    # print(request_to_mqtt)
